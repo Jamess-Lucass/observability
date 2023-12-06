@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option csharp_namespace = "ProductServiceGrpc";
+import "google/api/annotations.proto";
+
+package product;
+
+service Product {
+    rpc GetAllProducts(GetAllProductsRequest) returns (GetAllProductsResponse) {
+        option (google.api.http) = {
+            get: "/api/products",
+        };
+    }
+
+    rpc GetProduct(GetProductRequest) returns (GetProductResponse) {
+        option (google.api.http) = {
+            get: "/api/products/{id}",
+        };
+    }
+}
+
+message GetAllProductsRequest {}
+
+message GetAllProductsResponse {
+    repeated GetProductResponse value = 1;
+}
+
+message GetProductRequest {
+    string id = 1;
+}
+
+message GetProductResponse {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
