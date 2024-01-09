@@ -1,17 +1,24 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
+
+	pb "basket-service/protos"
 )
 
 type Basket struct {
@@ -27,21 +34,59 @@ type BasketItem struct {
 }
 
 type server struct {
-	pb.UnimplementedGreeterServer
+	pb.UnimplementedHelloServiceServer
+}
+
+func NewServer() *server {
+	return &server{}
+}
+
+func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloResponse, error) {
+	return &pb.HelloResponse{Message: "Hello, " + in.Name}, nil
 }
 
 func main() {
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		log.Fatalf("Failed to listen:", err)
+		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	log.Fatalln(s.Serve(lis))
+	reflection.Register(s)
+	pb.RegisterHelloServiceServer(s, &server{})
 
-	ch := connectToRabbitMQ()
-	redis := connectToRedis()
+	go func() {
+		log.Println("Serving gRPC on 0.0.0.0:50051")
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve gRPC server: %v", err)
+		}
+	}()
 
+	conn, err := grpc.DialContext(
+		context.Background(),
+		"0.0.0.0:50051",
+		grpc.WithBlock(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalln("Failed to dial server:", err)
+	}
+
+	gwmux := runtime.NewServeMux()
+	err = pb.RegisterHelloServiceHandler(context.Background(), gwmux, conn)
+	if err != nil {
+		log.Fatalln("Failed to register gateway:", err)
+	}
+
+	gwServer := &http.Server{
+		Addr:    ":50052",
+		Handler: gwmux,
+	}
+
+	log.Println("Serving gRPC-Gateway for REST on http://0.0.0.0:50052")
+	if err := gwServer.ListenAndServe(); err != nil {
+		log.Fatalf("Failed to serve gRPC-Gateway server: %v", err)
+	}
 }
 
 func connectToRedis() *redis.Client {
