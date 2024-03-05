@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - 5672:5672
+      - 15672:15672
+    restart: on-failure
+
+  grafana:
+    image: grafana/grafana-enterprise
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    ports:
+      - 3000:3000
+    restart: on-failure
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: on-failure
+
+  cadvisor:
+    image: google/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /mnt/windows_docker/:/rootfs/var/lib/docker:ro
+      - /dev/disk:/dev/disk/:ro
+    ports:
+      - 8082:8080
