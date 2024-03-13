@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  # VISUALIZATION
+  grafana:
+    image: grafana/grafana-enterprise
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    volumes:
+      - ./config/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    ports:
+      - 3000:3000
+    restart: on-failure
+
+  # LOGGING
+  loki:
+    image: grafana/loki
+    volumes:
+      - ./config/loki/config.yml:/etc/loki/config.yml
+    command: -config.file=/etc/loki/config.yml
+
+  promtail:
+    image: grafana/promtail
+    volumes:
+      - ./config/promtail/config.yml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+
+  # TRACING
+  agent:
+    image: grafana/agent
+    volumes:
+      - ./config/agent/agent.yml:/etc/agent.yml
+    ports:
+      - "4317:4317"
+    command: -config.file=/etc/agent.yml
+
+  tempo:
+    image: grafana/tempo
+    command: ["-config.file=/etc/tempo.yml"]
+    volumes:
+      - ./config/tempo/tempo.yml:/etc/tempo.yml
+      - ./tempo-data:/tmp/tempo
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus.yml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus.yml
+    ports:
+      - "9090:9090"
