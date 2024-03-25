@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: product
+    restart: on-failure
+
+  product-service:
+    image: product-service
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - 1000:8080
+      - "50001:50001"
+    restart: on-failure
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: product
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: test
+
+  product-service-dapr:
+    image: "daprio/daprd"
+    command:
+      [
+        "./daprd",
+        "-app-id",
+        "product-service",
+        "-app-port",
+        "8080",
+        "-placement-host-address",
+        "host.docker.internal:50006",
+      ]
+    depends_on:
+      - product-service
+    network_mode: "service:product-service"
+
+  # redis:
+  #   image: redis
+  #   ports:
+  #     - 6379:6379
+  #   restart: on-failure
+
+  # rabbitmq:
+  #   image: rabbitmq:3-management-alpine
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=guest
+  #     - RABBITMQ_DEFAULT_PASS=guest
+  #   ports:
+  #     - 5672:5672
+  #     - 15672:15672
+  #   restart: on-failure

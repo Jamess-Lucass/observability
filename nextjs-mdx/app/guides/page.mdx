@@ -1,0 +1,86 @@
+import { Button } from "@/components/ui/button"
+ 
+# Occulta pudori post absumptis auget vi suis
+
+## Humum Sicaniam Phegeius
+
+Lorem markdownum trabesque hunc astu: umeris Priameia, exspatiemur nomen ut
+tinxit enim, acceptior! Miratur esse accepit, et horror illis relicto adhuc per
+nostras me acta pelagi dominoque illic, me. Belli indurata Dorylas: te dedi
+taceam pietas epulasque, aetherios?
+
+> Illa suum damnare, ramis [fidumque](http://coniungereet.org/rediit-par) fides
+> caelataeque Tyrios causa, Graias. His recingor exit, sic magni, ortu premit.
+> Non holus, iram in in in maribus, capillos et dique frondem coniecit oro
+> patrios umeris et gemina stupet.
+
+## Aspiciunt cecidere auctor ab nulla ferens videt
+
+Eunt fores, tangeris, probor in auras heros curis _sponsi_, redeat. Causaque
+Trinacris studiis dare ita seu notus aere eventusque, Indigetes ait
+[virentes](http://timetis-nec.org/) segnis circumspicit creatis miserata genitor
+centum eloquitur? Medio his, secuta ante, sub iaculum humum ferox fortis,
+hiemes.
+
+```go
+func main() {
+  // This is a public sample test API key.
+  // Don’t submit any personally identifiable information in requests made with this key.
+  // Sign in to see your own test API key embedded in code samples.
+  stripe.Key = "sk_test_26PHem9AhJZvU623DfE1x4sd"
+
+  fs := http.FileServer(http.Dir("public"))
+  http.Handle("/", fs)
+  http.HandleFunc("/create-payment-intent", handleCreatePaymentIntent)
+
+  addr := "localhost:4242"
+  log.Printf("Listening on %s ...", addr)
+  log.Fatal(http.ListenAndServe(addr, nil))
+}
+```
+
+## Reduxit materna
+
+Non nefas frenis agitque, me capioque Iunonis et medicamine traiectus illo
+murmura. Philammon Zancle deprensi decus in tenuata Cycnum: merumque haerebat
+mitis, in catenas. Laetabitur adamante iacta Leucothoeque quidem terrent. Me
+quodque patrem pressos venabula Alce invenio, Aeneas quoque, signa vos.
+
+```typescript
+app.post("/create-payment-intent", async (req, res) => {
+  const { items } = req.body;
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: calculateOrderAmount(items),
+    currency: "usd",
+    // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
+});
+```
+
+## Regina nebulae miserum decipiet
+
+Nisi atque, nec corpora oculos est
+[magno](http://sororcomites.io/ieiuniapraeterque.html) subit multaeque ille:
+facies: re coronae positaeque ut urbes ore! Paternos cum maestissimus inde, et
+et haec inter, Pisenore dicta.
+
+- Succincta Idan Phasias flores
+- Caelestia furore blanditias gener
+- Vasta Graium induitur modo subiectaque ultro mortisque
+- Quod nec miratur rura est aequore
+- Post etiamnum
+- Marem in deque
+
+Vix his misce pollice nec genus ventis omne linguae, ineamus attrahite: et.
+Rapit re non heu!
+
+<Button variant="outline">Button</Button>
