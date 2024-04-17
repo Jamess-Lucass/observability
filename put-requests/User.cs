@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 public class User
 {
     public int Id { get; set; }
@@ -11,5 +13,6 @@ public class Address
     public string AddressLine1 { get; set; } = string.Empty;
     public string PostCode { get; set; } = string.Empty;
 
+    [JsonIgnore]
     public User User { get; } = new();
 }

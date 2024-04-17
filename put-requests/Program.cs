@@ -9,7 +9,7 @@ app.MapGet("/users", async (UserDb db) =>
     await db.Users.Include(x => x.Addresses).ToListAsync());
 
 app.MapGet("/users/{id}", async (int id, UserDb db) =>
-    await db.Users.FindAsync(id)
+    await db.Users.Include(x => x.Addresses).FirstOrDefaultAsync(x => x.Id == id)
         is User user
             ? Results.Ok(user)
             : Results.NotFound());
