@@ -1,0 +1,154 @@
+schema @link(url: "https:\/\/specs.apollo.dev\/federation\/v2.5", import: [ "@key", "@shareable", "FieldSet" ]) {
+  query: Query
+  mutation: Mutation
+}
+
+type CreateProductPayload {
+  response: Response
+}
+
+type Error @shareable {
+  message: String!
+  path: String!
+}
+
+type ErrorPayload @shareable {
+  errors: [Error!]
+}
+
+type Mutation {
+  createProduct(input: CreateProductInput!): CreateProductPayload!
+}
+
+"Information about pagination in a connection."
+type PageInfo {
+  "Indicates whether more edges exist following the set defined by the clients arguments."
+  hasNextPage: Boolean!
+  "Indicates whether more edges exist prior the set defined by the clients arguments."
+  hasPreviousPage: Boolean!
+  "When paginating backwards, the cursor to continue."
+  startCursor: String
+  "When paginating forwards, the cursor to continue."
+  endCursor: String
+}
+
+type Product @key(fields: "id") {
+  id: UUID!
+  name: String!
+  description: String!
+  price: Decimal!
+}
+
+"A connection to a list of items."
+type ProductsConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges."
+  edges: [ProductsEdge!]
+  "A flattened list of the nodes."
+  nodes: [Product!]
+}
+
+"An edge in a connection."
+type ProductsEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of the edge."
+  node: Product!
+}
+
+type Query {
+  products("Returns the first _n_ elements from the list." first: Int "Returns the elements in the list that come after the specified cursor." after: String "Returns the last _n_ elements from the list." last: Int "Returns the elements in the list that come before the specified cursor." before: String where: ProductFilterInput): ProductsConnection
+  product(id: UUID!): Product
+  _service: _Service!
+  _entities(representations: [_Any!]!): [_Entity]!
+}
+
+"This type provides a field named sdl: String! which exposes the SDL of the service's schema. This SDL (schema definition language) is a printed version of the service's schema including the annotations of federation directives. This SDL does not include the additions of the federation spec."
+type _Service {
+  sdl: String!
+}
+
+union Response = ErrorPayload | Product
+
+"Union of all types that key directive applied. This information is needed by the Apollo federation gateway."
+union _Entity = Product
+
+input CreateProductInput {
+  name: String!
+  description: String!
+  price: Decimal!
+}
+
+input DecimalOperationFilterInput {
+  eq: Decimal
+  neq: Decimal
+  in: [Decimal]
+  nin: [Decimal]
+  gt: Decimal
+  ngt: Decimal
+  gte: Decimal
+  ngte: Decimal
+  lt: Decimal
+  nlt: Decimal
+  lte: Decimal
+  nlte: Decimal
+}
+
+input ProductFilterInput {
+  and: [ProductFilterInput!]
+  or: [ProductFilterInput!]
+  id: UuidOperationFilterInput
+  name: StringOperationFilterInput
+  description: StringOperationFilterInput
+  price: DecimalOperationFilterInput
+}
+
+input StringOperationFilterInput {
+  and: [StringOperationFilterInput!]
+  or: [StringOperationFilterInput!]
+  eq: String
+  neq: String
+  contains: String
+  ncontains: String
+  in: [String]
+  nin: [String]
+  startsWith: String
+  nstartsWith: String
+  endsWith: String
+  nendsWith: String
+}
+
+input UuidOperationFilterInput {
+  eq: UUID
+  neq: UUID
+  in: [UUID]
+  nin: [UUID]
+  gt: UUID
+  ngt: UUID
+  gte: UUID
+  ngte: UUID
+  lt: UUID
+  nlt: UUID
+  lte: UUID
+  nlte: UUID
+}
+
+"Used to indicate a combination of fields that can be used to uniquely identify and fetch an object or interface."
+directive @key(fields: FieldSet! resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
+
+directive @link(url: String! import: [String!]) repeatable on SCHEMA
+
+"Indicates that given object and\/or field can be resolved by multiple subgraphs."
+directive @shareable repeatable on OBJECT | FIELD_DEFINITION
+
+"The built-in `Decimal` scalar type."
+scalar Decimal
+
+"Scalar representing a set of fields."
+scalar FieldSet
+
+scalar UUID @specifiedBy(url: "https:\/\/tools.ietf.org\/html\/rfc4122")
+
+"The _Any scalar is used to pass representations of entities from external services into the root _entities field for execution. Validation of the _Any scalar is done by matching the __typename and @external fields defined in the schema."
+scalar _Any

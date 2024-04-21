@@ -1,0 +1,72 @@
+schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.5"
+    import: ["@key", "@shareable", "@override", "FieldSet"]
+  ) {
+  query: Query
+  mutation: Mutation
+}
+
+directive @goModel(
+  model: String
+  models: [String!]
+) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+
+scalar Uint
+scalar UUID
+
+type CreateBasketPayload {
+  response: Response
+}
+
+union Response = ErrorPayload | Basket
+
+type Error @shareable {
+  message: String!
+  path: String!
+}
+
+type ErrorPayload @shareable {
+  errors: [Error!]
+}
+
+type Basket {
+  id: ID!
+  items: [BasketItem!]!
+}
+
+type BasketItem @goModel(model: "basket-service/graph/model.BasketItem") {
+  id: ID!
+  product: Product!
+  price: Float!
+  quantity: Uint!
+}
+
+extend type Product @key(fields: "id") {
+  id: UUID!
+  name: String! @shareable @override(from: "products")
+}
+
+# type Product @key(fields: "id") {
+#   id: UUID!
+#   name: String!
+#   description: String!
+#   price: Decimal!
+# }
+
+type Query {
+  basket(id: ID!): Basket!
+}
+
+input CreateBasketRequest {
+  items: [CreateBasketItemRequest!]!
+}
+
+input CreateBasketItemRequest {
+  productId: ID!
+  quantity: Uint!
+}
+
+type Mutation {
+  createBasket(input: CreateBasketRequest!): CreateBasketPayload!
+}
