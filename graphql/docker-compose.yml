@@ -67,6 +67,13 @@ services:
     volumes:
       - ./config/tempo/tempo.yml:/etc/tempo.yml
 
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    command: server /data --console-address ":9001"
+
   product-service:
     labels:
       grafana.logs/enabled: "true"
@@ -83,7 +90,22 @@ services:
       POSTGRES_DATABASE: product
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: test
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_URL: minio:9000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4317
     depends_on:
       postgres:
         condition: service_healthy
+
+  gateway:
+    image: gateway
+    build:
+      context: ./src/gateway
+      dockerfile: Dockerfile
+    environment:
+      PRODUCTS_SUBGRAPH_URL: http://product-service:8080/graphql
+      # BASKETS_SUBGRAPH_URL: http://localhost:8080/graphql
+    ports:
+      - 4000:4000
+    restart: on-failure

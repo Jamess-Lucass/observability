@@ -21,10 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="p-4">
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased p-4",
+          "min-h-screen bg-background font-sans antialiased",
           fontSans.variable
         )}
       >

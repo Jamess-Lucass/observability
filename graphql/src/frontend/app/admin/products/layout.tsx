@@ -7,14 +7,12 @@ export default function AdminLayout({
 }>) {
   return (
     <div>
-      <h1 className="text-2xl">Admin view</h1>
-
-      <nav className="flex gap-4 py-4">
+      <nav className="flex gap-4">
         <Link
-          href="/admin/products"
+          href="/admin/products/create"
           className="hover:underline text-muted-foreground"
         >
-          Products
+          Create
         </Link>
       </nav>
 

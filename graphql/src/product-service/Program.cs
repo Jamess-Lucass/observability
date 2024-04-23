@@ -1,11 +1,12 @@
 using System.Diagnostics;
 using System.Reflection;
-using System.Text;
 using FluentValidation;
 using HotChocolate.Diagnostics;
 using HotChocolate.Execution;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.ObjectPool;
+using Minio;
+using Minio.DataModel.Args;
+using Minio.Exceptions;
 using Npgsql;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -13,8 +14,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
-using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,6 +92,49 @@ using (var scope = app.Services.CreateScope())
     var schema = executor.Schema.Print();
     File.WriteAllText("schema.graphql", schema);
 }
+
+app.MapPost("/api/v1/products/fileupload", async (ILogger<Program> logger, IFormFile file) =>
+{
+    var minio = new MinioClient()
+        .WithEndpoint(Environment.GetEnvironmentVariable("MINIO_URL"))
+        .WithCredentials(Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"), Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"))
+        .Build();
+
+    var bucketName = "products";
+
+    try
+    {
+        var beArgs = new BucketExistsArgs().WithBucket(bucketName);
+        bool found = await minio.BucketExistsAsync(beArgs).ConfigureAwait(false);
+
+        if (!found)
+        {
+            var mbArgs = new MakeBucketArgs().WithBucket(bucketName);
+            await minio.MakeBucketAsync(mbArgs).ConfigureAwait(false);
+        }
+
+        var stream = file.OpenReadStream();
+
+        var putObjectArgs = new PutObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(file.FileName)
+            .WithStreamData(stream)
+            .WithObjectSize(stream.Length)
+            .WithContentType(file.ContentType);
+
+        await minio.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
+
+        var uploadedFile = await minio.StatObjectAsync(new StatObjectArgs().WithBucket(bucketName).WithObject(file.FileName));
+
+        return Results.Ok($"File '{uploadedFile.ObjectName}' uploaded successfully. {uploadedFile.ETag}");
+    }
+    catch (MinioException e)
+    {
+        logger.LogError(e.Message, e);
+
+        return Results.BadRequest(e.Message);
+    }
+}).DisableAntiforgery();
 
 app.Use(async (context, next) =>
 {

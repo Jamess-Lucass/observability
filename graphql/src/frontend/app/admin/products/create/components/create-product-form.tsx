@@ -14,7 +14,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { graphql } from "@/gql/gql";
 import { CreateProductInput, MutationCreateProductArgs } from "@/gql/graphql";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -49,6 +49,8 @@ const schema = z.object({
 }) satisfies z.ZodType<CreateProductInput>;
 
 export default function AdminCreateProductForm() {
+  const queryClient = useQueryClient();
+
   const form = useForm<CreateProductInput>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -80,6 +82,8 @@ export default function AdminCreateProductForm() {
 
         return;
       }
+
+      queryClient.invalidateQueries({ queryKey: ["products"] });
 
       toast.success("Product has been created");
     },

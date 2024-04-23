@@ -5,8 +5,8 @@ import { startStandaloneServer } from "@apollo/server/standalone";
 const gateway = new ApolloGateway({
   supergraphSdl: new IntrospectAndCompose({
     subgraphs: [
-      { name: "baskets", url: "http://localhost:8080/graphql" },
-      { name: "products", url: "http://localhost:5000/graphql" },
+      { name: "products", url: process.env.PRODUCTS_SUBGRAPH_URL },
+      // { name: "baskets", url: process.env.BASKETS_SUBGRAPH_URL },
     ],
   }),
 });
