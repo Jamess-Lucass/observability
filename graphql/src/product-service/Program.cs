@@ -28,6 +28,12 @@ string connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Userna
 builder.Services.AddDbContext<ProductContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
+builder.Services.AddMinio(configureClient => configureClient
+    .WithEndpoint(Environment.GetEnvironmentVariable("MINIO_URL"))
+    .WithCredentials(Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"), Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"))
+    .Build()
+    .WithSSL(false));
+
 builder.Host.UseSerilog((ctx, x) =>
 {
     x.Enrich.FromLogContext();
@@ -93,13 +99,8 @@ using (var scope = app.Services.CreateScope())
     File.WriteAllText("schema.graphql", schema);
 }
 
-app.MapPost("/api/v1/products/fileupload", async (ILogger<Program> logger, IFormFile file) =>
+app.MapPost("/api/v1/products/fileupload", async (ILogger<Program> logger, IMinioClient minio, IFormFile file) =>
 {
-    var minio = new MinioClient()
-        .WithEndpoint(Environment.GetEnvironmentVariable("MINIO_URL"))
-        .WithCredentials(Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"), Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"))
-        .Build();
-
     var bucketName = "products";
 
     try
