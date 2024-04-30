@@ -1,0 +1,62 @@
+schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.5"
+    import: ["@key", "@shareable", "@override", "FieldSet"]
+  ) {
+  query: Query
+  mutation: Mutation
+}
+
+directive @goModel(
+  model: String
+  models: [String!]
+) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+
+scalar Uint
+scalar UUID
+
+union Response = ErrorPayload | User
+
+type SignupPayload {
+  response: Response
+}
+
+type SigninPayload {
+  response: Response
+}
+
+type Error @shareable {
+  message: String!
+  path: String!
+}
+
+type ErrorPayload @shareable {
+  errors: [Error!]
+}
+
+type User {
+  id: ID!
+  firstname: String!
+  lastname: String!
+  email: String!
+}
+
+type Query {
+  me: User!
+  users: [User!]!
+}
+
+input SignupRequest {
+  firstname: String!
+  lastname: String!
+  email: String!
+}
+
+input SigninRequest {
+  email: String!
+}
+
+type Mutation {
+  signup(input: SignupRequest!): SignupPayload!
+  signin(input: SigninRequest!): SigninPayload!
+}
