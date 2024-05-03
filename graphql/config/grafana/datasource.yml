@@ -1,6 +1,7 @@
 apiVersion: 1
 
 datasources:
+  # Loki for logs
   - name: Loki
     type: loki
     access: proxy
@@ -16,19 +17,24 @@ datasources:
           url: "$${__value.raw}"
           urlDisplayLabel: "View Trace"
 
-  - name: Prometheus
+  # Mimir for metrics
+  - name: Metrics
     type: prometheus
-    uid: prometheus
+    uid: metrics
     access: proxy
     orgId: 1
-    url: http://prometheus:9090
+    url: http://mimir:9009/prometheus
     basicAuth: false
     isDefault: false
     version: 1
-    editable: false
+    editable: true
     jsonData:
-      httpMethod: GET
+      prometheusType: Mimir
+      exemplarTraceIdDestinations:
+        - name: TraceID
+          datasourceUid: tempo
 
+  # Tempo for logs
   - name: Tempo
     type: tempo
     access: proxy

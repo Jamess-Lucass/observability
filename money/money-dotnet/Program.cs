@@ -1,29 +1,37 @@
-﻿var order = new Order()
+﻿var convertor = new Dictionary<string, decimal>()
 {
-    Items = new List<OrderItem>()
-    {
-        new OrderItem(0.333m),
-        new OrderItem(0.333m),
-        new OrderItem(0.333m),
-    }
+    {"USD", 1.25327m}
 };
 
-var totalPrice = order.Items.Sum(x => x.Price);
+var product = new Product(5.00m, "GBP");
 
-Console.WriteLine(totalPrice);
+var USDPricing = convertor["USD"] * product.Price;
+
+var order = new Order(USDPricing, "USD");
+
+Console.WriteLine(order.Price);
 
 
 class Order
 {
-    public IEnumerable<OrderItem> Items { get; set; } = new List<OrderItem>();
-}
-
-class OrderItem
-{
-    public OrderItem(decimal price)
+    public Order(decimal price, string currency)
     {
         Price = price;
+        Currency = currency;
     }
 
     public decimal Price { get; set; }
+    public string Currency { get; set; } = string.Empty;
+}
+
+class Product
+{
+    public Product(decimal price, string currency)
+    {
+        Price = price;
+        Currency = currency;
+    }
+
+    public decimal Price { get; set; }
+    public string Currency { get; set; } = string.Empty;
 }

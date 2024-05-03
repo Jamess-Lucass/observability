@@ -64,6 +64,9 @@ builder.Services
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(x => x
         .AddService(builder.Environment.ApplicationName))
+    .WithMetrics(x => x
+        .AddAspNetCoreInstrumentation()
+        .AddPrometheusExporter())
     .WithTracing(x => x
         .AddAspNetCoreInstrumentation()
         .AddEntityFrameworkCoreInstrumentation()
@@ -80,6 +83,8 @@ app.UseCors(opt => opt
     .AllowCredentials()
     .WithExposedHeaders("ETag")
 );
+
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
 using (var scope = app.Services.CreateScope())
 {

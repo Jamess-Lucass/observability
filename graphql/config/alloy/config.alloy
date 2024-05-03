@@ -37,10 +37,25 @@ discovery.relabel "label_logs_filter" {
 	}
 }
 
+loki.process "process_logs" {
+	stage.json {
+        expressions = {
+            path = "\"url.path\"",
+        }
+    }
+
+	stage.drop {
+		source = "path"
+		value  = "/metrics" // Do not store any logs for /metrics prometheus endpoint, it is just spam.
+	}
+
+	forward_to       = [loki.write.loki.receiver]
+}
+
 loki.source.docker "logs_integrations_docker" {
     host             = "unix:///var/run/docker.sock"
     targets          = discovery.docker.logs_integrations_docker.targets
-    forward_to       = [loki.write.loki.receiver]
+    forward_to       = [loki.process.process_logs.receiver]
     refresh_interval = "5s"
 	relabel_rules = discovery.relabel.label_logs_filter.rules
 
@@ -74,11 +89,52 @@ otelcol.processor.batch "default" {
 
 otelcol.exporter.otlp "tempo" {
 	client {
-	endpoint = coalesce(env("TEMPO_HOST"), "localhost:4317")
+		endpoint = coalesce(env("TEMPO_HOST"), "localhost:4317")
 
-	tls {
-		insecure = true
-		insecure_skip_verify = true
+		tls {
+			insecure = true
+			insecure_skip_verify = true
+		}
 	}
+}
+
+//
+// Metrics
+//
+discovery.docker "metrics_integrations_docker" {
+    host             = "unix:///var/run/docker.sock"
+    refresh_interval = "20s"
+	filter {
+		name = "label"
+		values = ["grafana.metrics/enabled=true"]
 	}
+}
+
+discovery.relabel "label_metrics_filter" {
+	targets = discovery.docker.metrics_integrations_docker.targets
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+}
+
+prometheus.scrape "pc_docker_metrics" {
+    targets = discovery.relabel.label_metrics_filter.output
+    scrape_interval = "2s"
+    scrape_timeout = "2s"
+    forward_to = [prometheus.remote_write.mimir.receiver]
+    job_name = "label-metrics"
+}
+
+prometheus.remote_write "mimir" {
+    endpoint {
+        url = coalesce(env("MIMIR_HOST"), "http://mimir:9009/api/v1/push")
+
+        basic_auth {
+            username = coalesce(env("MIMIR_USERNAME"), "")
+            password = coalesce(env("MIMIR_PASSWORD"), "")
+        }
+    }
 }

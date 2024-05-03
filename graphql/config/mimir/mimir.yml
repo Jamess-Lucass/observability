@@ -1,0 +1,34 @@
+multitenancy_enabled: false
+
+usage_stats:
+  enabled: false
+
+server:
+  http_listen_port: 9009
+  log_level: warn
+
+common:
+  storage:
+    backend: s3
+    s3:
+      endpoint: minio:9000
+      access_key_id: minio
+      secret_access_key: supersecret
+      bucket_name: mimir
+      insecure: true
+      http:
+        insecure_skip_verify: true
+
+ingester:
+  ring:
+    replication_factor: 1
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+
+blocks_storage:
+  s3:
+    bucket_name: mimir-blocks
+  tsdb:
+    dir: /data/ingester

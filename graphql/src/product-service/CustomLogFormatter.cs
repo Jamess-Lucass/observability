@@ -44,7 +44,16 @@ public class CustomLogFormatter : ITextFormatter
 
         foreach (var property in logEvent.Properties.Where(x => _allowedProperties.Contains(x.Key, StringComparer.OrdinalIgnoreCase)))
         {
-            log.Add(property.Key, property.Value.ToString());
+            switch (property.Key)
+            {
+                case "RequestPath":
+                    // Remove double quotes
+                    log.Add("url.path", property.Value.ToString().Replace("\"", ""));
+                    break;
+                default:
+                    log.Add(property.Key, property.Value.ToString());
+                    break;
+            }
         }
 
         string logLine = JsonSerializer.Serialize(log, _jsonOptions);
