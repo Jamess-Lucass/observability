@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { graphql } from "@/gql/gql";
+import { graphql } from "@/graphql";
 import request from "graphql-request";
 import {
   Card,

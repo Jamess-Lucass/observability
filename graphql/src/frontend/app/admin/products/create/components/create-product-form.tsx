@@ -11,8 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { graphql } from "@/gql/gql";
-import { CreateProductInput, MutationCreateProductArgs } from "@/gql/graphql";
+import { VariablesOf, graphql } from "@/graphql";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
@@ -20,7 +19,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const createProductMutationGQL = graphql(`
+const createProductMutation = graphql(`
   mutation CreateProduct($input: CreateProductInput!) {
     createProduct(input: $input) {
       response {
@@ -46,12 +45,12 @@ const schema = z.object({
   name: z.string().min(2).max(128),
   description: z.string().min(2).max(128),
   price: z.coerce.number(),
-}) satisfies z.ZodType<CreateProductInput>;
+}) satisfies z.ZodType<VariablesOf<typeof createProductMutation>["input"]>;
 
 export default function AdminCreateProductForm() {
   const queryClient = useQueryClient();
 
-  const form = useForm<CreateProductInput>({
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
@@ -60,19 +59,17 @@ export default function AdminCreateProductForm() {
     },
   });
 
-  const createProductMutation = useMutation({
-    mutationFn: (body: MutationCreateProductArgs) =>
-      request("http://localhost:5000/graphql", createProductMutationGQL, body),
+  const createProduct = useMutation({
+    mutationFn: (body: VariablesOf<typeof createProductMutation>) =>
+      request("http://localhost:5000/graphql", createProductMutation, body),
     onSuccess: (data) => {
       const response = data.createProduct.response;
-
-      console.log(response?.__typename);
 
       if (response?.__typename === "ErrorPayload" && response.errors) {
         for (const error of response.errors) {
           // TODO: make this fully type-safe by adding an enum for the properties
           // to the graphql error endpoint
-          form.setError(error.path as keyof CreateProductInput, {
+          form.setError(error.path as keyof z.infer<typeof schema>, {
             type: "custom",
             message: error.message,
           });
@@ -89,8 +86,8 @@ export default function AdminCreateProductForm() {
     },
   });
 
-  function onSubmit(data: CreateProductInput) {
-    createProductMutation.mutate({ input: data });
+  function onSubmit(data: z.infer<typeof schema>) {
+    createProduct.mutate({ input: data });
   }
 
   return (
@@ -146,7 +143,7 @@ export default function AdminCreateProductForm() {
         />
 
         <Button type="submit">
-          {createProductMutation.isPending && <Spinner className="mr-2" />}
+          {createProduct.isPending && <Spinner className="mr-2" />}
           Create Product
         </Button>
       </form>

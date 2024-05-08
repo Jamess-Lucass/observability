@@ -19,7 +19,7 @@ func (Basket) IsResponse() {}
 
 type CreateBasketItemRequest struct {
 	ProductID uuid.UUID `json:"productId"`
-	Quantity  string    `json:"quantity"`
+	Quantity  uint      `json:"quantity"`
 }
 
 type CreateBasketPayload struct {

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   CaretSortIcon,
   ChevronDownIcon,
@@ -39,10 +38,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { graphql } from "@/gql";
+import { ResultOf, graphql, ExtractNodeType } from "@/graphql";
 import request from "graphql-request";
 import { useQuery } from "@tanstack/react-query";
-import { Product } from "@/gql/graphql";
 import { ChangeEvent, useState } from "react";
 
 const productsQuery = graphql(`
@@ -58,7 +56,9 @@ const productsQuery = graphql(`
   }
 `);
 
-export const columns: ColumnDef<Product>[] = [
+const columns: ColumnDef<
+  ExtractNodeType<ResultOf<typeof productsQuery>["products"]>
+>[] = [
   {
     id: "select",
     header: ({ table }) => (

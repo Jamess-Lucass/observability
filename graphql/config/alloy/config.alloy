@@ -75,7 +75,21 @@ otelcol.receiver.otlp "default" {
 	}
 
 	output {
-		traces  = [otelcol.processor.batch.default.input]
+		traces  = [otelcol.processor.filter.default.input]
+	}
+}
+
+otelcol.processor.filter "default" {
+	error_mode = "ignore"
+
+	traces {
+		span = [
+			"attributes[\"url.path\"] == \"/metrics\"",
+		]
+	}
+
+	output {
+		traces = [otelcol.processor.batch.default.input]
 	}
 }
 

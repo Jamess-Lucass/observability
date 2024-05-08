@@ -109,6 +109,37 @@ services:
       postgres:
         condition: service_healthy
 
+  basket-service:
+    labels:
+      grafana.logs/enabled: true
+      grafana.metrics/enabled: true
+    image: basket-service
+    build:
+      context: ./src/basket-service
+      dockerfile: Dockerfile
+    ports:
+      - 5001:8080
+    restart: on-failure
+    environment:
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4317
+    depends_on:
+      - redis
+
+  frontend:
+    image: frontend
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    ports:
+      - 3001:3000
+    restart: on-failure
+    depends_on:
+      gateway:
+        condition: service_started
+
   gateway:
     image: gateway
     build:
@@ -116,7 +147,12 @@ services:
       dockerfile: Dockerfile
     environment:
       PRODUCTS_SUBGRAPH_URL: http://product-service:8080/graphql
-      # BASKETS_SUBGRAPH_URL: http://localhost:8080/graphql
+      BASKETS_SUBGRAPH_URL: http://basket-service:8080/graphql
     ports:
       - 4000:4000
     restart: on-failure
+    depends_on:
+      product-service:
+        condition: service_started
+      basket-service:
+        condition: service_started
